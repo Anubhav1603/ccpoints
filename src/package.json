@@ -1,0 +1,23 @@
+{
+  "name": "fwapoints",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "lint": "eslint .",
+    "start": "node index.js",
+    "watch": "supervisor -w . -n exit -- index.js"
+  },
+  "author": "kuilin",
+  "license": "UNLICENSED",
+  "dependencies": {
+    "express": "^4.17.1",
+    "express-session": "^1.17.2",
+    "pg-monitor": "^1.4.1",
+    "pg-promise": "^10.10.2"
+  },
+  "devDependencies": {
+    "eslint": "^7.29.0",
+    "supervisor": "^0.12.0"
+  }
+}
