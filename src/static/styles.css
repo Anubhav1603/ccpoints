@@ -1,0 +1,47 @@
+html {
+  font-family: "Times New Roman", Times, serif;
+  font-size: 16px;
+}
+td {
+  padding: 0.2rem;
+}
+a:link, a:visited {
+  color: blue;
+}
+a.black:link {
+  color: black;
+}
+a:hover, a.black:hover {
+  color: red;
+}
+textarea {
+  width: 300px;
+  height: 100px;
+}
+.right {
+  text-align: right;
+}
+.center {
+  text-align: center;
+}
+.red {
+  color: #ff0000;
+}
+.bg-gray {
+  background-color: #eeeeee;
+}
+.bg-red {
+  background-color: #ffcccc;
+}
+.bg-green {
+  background-color: #ccffcc;
+}
+.bg-red:disabled, .bg-green:disabled {
+  background-color: initial;
+}
+.winner-box {
+  border: 2px solid red;
+  border-radius: 2px;
+  padding: 10px;
+  display: table;
+}

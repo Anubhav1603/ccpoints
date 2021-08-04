@@ -1,0 +1,40 @@
+<%
+  const pages = [
+    // perm, name, link
+    ["login", "Public Clan List", "clans"],
+    ["login", "Reload Clans", "reload"],
+    [null, null, null],
+    ["manage", "Manage Users", "users"],
+    ["manage", "Audit Log", "audit"],
+    ["update", "Update System", "update"],
+    [null, null, null],
+    ["record", "Record Sync", "sync"],
+    ["record", "Record Sanction", "record?template=sanction"],
+    ["record", "Record Reward", "record?template=reward"],
+    [null, null, null],
+    ["login", "Edit Profile", "profile"],
+    ["login", "Log Out", "logout"],
+  ];
+
+  const check = await requirePerm(req, "login");
+  if (check !== true) { %><%- check %><% }
+  else { %>
+    <%- await include("partials/header.ejs", {req, res, title: "Admin Menu"}) %>
+    <h3>Main admin menu</h3>
+    <ul>
+      <% for (let [perm, name, link] of pages) {
+        if (perm === null) {
+          %><li style="list-style:none;">&nbsp;</li><%
+          continue;
+        }
+        %>
+        <li>
+          <a href="/<%= link %>" <%- await requirePerm(req, perm) !== true ? 'class="black"' : '' %>>
+            <%= name %>
+          </a>
+        </li>
+      <% } %>
+    </ul>
+    <%- await include("partials/footer.ejs", {req, res}) %>
+  <% }
+%>

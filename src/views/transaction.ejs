@@ -1,0 +1,60 @@
+<%
+  const check = await requirePerm(req, "record");
+
+  const trans = await db.oneOrNone("select * from transactions where transid=$[id]", req.query);
+  if (!trans) { %>Transaction not found.<% }
+  else if (check !== true) { %><%- check %><% }
+  else if (trans.deleted) { %>Transaction is deleted<% }
+  else {
+%>
+  <%- await include("partials/header.ejs", {req, res, title: "Edit Transaction"}) %>
+  <h3>Edit Transaction</h3>
+  <form action="/do_transaction" method="post">
+    <input type="hidden" name="transid" value="<%= trans.transid %>" />
+    <table>
+      <tbody>
+        <tr>
+          <td>Transaction ID</td>
+          <td><input type="text" value="<%= trans.transid %>" disabled /></td>
+          <td></td>
+        </tr>
+        <tr>
+          <td>Clan Tag</td>
+          <td><input type="text" value="<%= trans.clantag %>" disabled /></td>
+          <td></td>
+        </tr>
+        <tr>
+          <td>Timestamp</td>
+          <td><input type="text" name="ts" value="<%= trans.ts.toISOString() %>" /></td>
+          <td>Enter in <tt>YYYY-MM-DDTHH:mm:ss.sssZ</tt> format, UTC timezone</td>
+        </tr>
+        <tr>
+          <td>War ID</td>
+          <td><input type="number" name="warid" value="<%= trans.warid %>" /></td>
+          <td>Must be a valid war ID, or empty</td>
+        </tr>
+        <tr>
+          <td>Point Change</td>
+          <td><input type="number" class="redgreen" name="points" value="<%= trans.points %>" /></td>
+          <td>Clan point sum will automatically be recalculated</td>
+        </tr>
+        <tr>
+          <td>Public Note</td>
+          <td><textarea name="pubnote"><%= trans.pubnote %></textarea></td>
+          <td>Visible to everyone</td>
+        </tr>
+        <tr>
+          <td>Private Note</td>
+          <td><textarea name="privnote"><%= trans.privnote %></textarea></td>
+          <td>Visible to only to admins</td>
+        </tr>
+        <tr>
+          <td colspan="2" class="right">
+            <input type="submit" value="Save" />
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </form>
+  <% } %>
+<%- await include("partials/footer.ejs", {req, res}) %>

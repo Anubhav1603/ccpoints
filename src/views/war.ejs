@@ -1,0 +1,44 @@
+<%
+if (!isFinite(+req.query.id)) { %>War ID required.<% } else {
+  const war = await db.oneOrNone("select * from wars where warid=$[warid]", {warid: +req.query.id});
+  if (!war) { %>War not found.<% } else {
+    %>
+    <%- await include("partials/header.ejs", {req, res, title: "War #" + war.warid}) %>
+    <h3>Viewing war #<%= war.warid %></h3>
+    <p>
+      <b>War Ended</b>: <%= war.ts.toISOString() %><br />
+      <b>Team Size</b>: <%= war.data.teamSize %>
+    </p>
+    <table>
+      <% for (let side of ["a", "b"]) {
+        const d = war.data[side];
+        const winText = war.data.result === 0 ? "War ended in a draw" :
+            (side === "a") ^ (war.data.result === -1) ? "Won the war" : "Lost the war";
+        %>
+        <tr>
+          <td>
+            <img src="<%= d.badgeUrlLarge %>" style="width: 100px;" />
+          </td>
+          <td>
+            <p>
+              <b>Clan <%= side.toUpperCase() %></b>:<br />
+              <% if (d.active) { %>
+                <a href="/clan?tag=<%= d.tag %>"><%= d.name %></a>
+              <% } else { %>
+                <%= d.name %>
+              <% } %> (<%= d.tag %>) Level <%= d.clanLevel %>
+              <br />
+              <%= (d.pct/100).toFixed(2) %>% |
+              <%= d.stars %> &#9733; |
+              <%= d.attacks %> Atks |
+              <%= d.expEarned %> EXP <br />
+              <br />
+              <%= winText %>
+            </p>
+          </td>
+        </tr>
+      <% } %>
+    </table>
+    <%- await include("partials/footer.ejs", {req, res}) %>
+  <% } %>
+<% } %>

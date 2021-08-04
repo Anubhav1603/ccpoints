@@ -1,0 +1,2 @@
+<% req.session = null; %>
+Redirecting after logout...<script>window.location = window.location.origin + <%- JSON.stringify(req.query.to || "/") %></script>

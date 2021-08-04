@@ -1,0 +1,23 @@
+version: "3"
+services:
+  fwapoints:
+    image: node:latest
+    volumes:
+     - .:/app
+    restart: always
+    working_dir: /app/src
+    entrypoint: "yarn watch"
+    ports:
+     - 3000:3000
+    environment:
+      - SESSION_SECRET=changeme
+      - CLASH_API_TOKEN=changeme
+  postgres:
+    image: postgres:13-alpine
+    volumes:
+      - ./data:/var/lib/postgresql/data
+      - ./src/setup.sql:/docker-entrypoint-initdb.d/setup.sql
+    environment:
+      - POSTGRES_DB=fwapoints
+      - POSTGRES_USER=fwapoints
+      - POSTGRES_PASSWORD=fwapoints

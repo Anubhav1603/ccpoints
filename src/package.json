@@ -6,18 +6,24 @@
   "scripts": {
     "lint": "eslint .",
     "start": "node index.js",
-    "watch": "supervisor -w . -n exit -- index.js"
+    "watch": "supervisor -w . -n error -- index.js"
   },
   "author": "kuilin",
   "license": "UNLICENSED",
   "dependencies": {
+    "body-parser": "^1.19.0",
+    "cookie-session": "^1.4.0",
+    "csv-parse": "^4.16.0",
+    "ejs": "^3.1.6",
     "express": "^4.17.1",
-    "express-session": "^1.17.2",
+    "html-minifier": "^4.0.0",
+    "morgan": "^1.10.0",
+    "node-fetch": "^2.6.1",
     "pg-monitor": "^1.4.1",
     "pg-promise": "^10.10.2"
   },
   "devDependencies": {
-    "eslint": "^7.29.0",
+    "eslint": "^7.32.0",
     "supervisor": "^0.12.0"
   }
 }

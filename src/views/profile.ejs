@@ -1,0 +1,53 @@
+<%
+const check = await requirePerm(req, "login");
+if (check !== true) { %><%- check %><% }
+else { %>
+  <%- await include("partials/header.ejs", {req, res, title: "My Profile"}) %>
+  <h3>Edit Profile</h3>
+  <form action="/do_profile" method="post" onsubmit="return (this.password.value === this.passwordconfirm.value ? 1 : (alert('Passwords don\'t match'), false))">
+    <input type="hidden" name="userid" value="<%= req.session.user.userid %>" />
+    <table>
+      <tbody>
+        <tr>
+          <td>User ID</td>
+          <td><input type="text" value="<%= req.session.user.userid %>" disabled /></td>
+          <td></td>
+        </tr>
+        <tr>
+          <td>Permissions</td>
+          <td><input type="text" value="<%= JSON.stringify(req.session.user.perms) %>" disabled /></td>
+          <td>Ask an admin with the <tt>manage</tt> permission to change these.</td>
+        </tr>
+        <tr><td colspan="3">&nbsp;</td></tr>
+        <tr>
+          <td>Email</td>
+          <td><input type="text" name="email" value="<%= req.session.user.email %>" /></td>
+          <td>Private, used only to log in. Doesn't actually have to be an email address.</td>
+        </tr>
+        <tr>
+          <td>Username</td>
+          <td><input type="text" name="username" value="<%= req.session.user.name %>" /></td>
+          <td>Public. Don't put any prefixes like ADMN or OFH.</td>
+        </tr>
+        <tr><td colspan="3">&nbsp;</td></tr>
+        <tr>
+          <td>Password</td>
+          <td><input type="password" name="password" /></td>
+          <td>Leave blank if not changing password.</td>
+        </tr>
+        <tr>
+          <td>Password Again</td>
+          <td><input type="password" name="passwordconfirm" /></td>
+          <td></td>
+        </tr>
+        <tr><td colspan="3">&nbsp;</td></tr>
+        <tr>
+          <td colspan="2" class="right">
+            <input type="submit" value="Login" />
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </form>
+  <%- await include("partials/footer.ejs", {req, res}) %>
+<% } %>

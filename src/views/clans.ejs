@@ -1,0 +1,20 @@
+<%- await include("partials/header.ejs", {req, res}) %>
+<table>
+  <thead>
+    <tr>
+      <td><b>Clan Tag</b></td>
+      <td><b>Clan Name</b></td>
+      <td><b>Points</b></td>
+    </tr>
+  </thead>
+  <tbody>
+    <% for await (let {clantag, clanname, points} of await db.any("select * from clans where active=true order by clanname asc;")) { %>
+      <tr>
+        <td><%= clantag %></td>
+        <td><a href="/clan?tag=<%= clantag %>"><%= clanname %></a></td>
+        <td><%= points %></td>
+      </tr>
+    <% } %>
+  </tbody>
+</table>
+<%- await include("partials/footer.ejs", {req, res}) %>

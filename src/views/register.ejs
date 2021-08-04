@@ -1,0 +1,42 @@
+<%
+if (!req.query.key) { %>key expected<% }
+else {
+%>
+  <%- await include("partials/header.ejs", {req, res, title: "Registration"}) %>
+  <h3>New User Registration</h3>
+  <form action="/do_register" method="post" onsubmit="return (this.password.value === this.passwordconfirm.value ? 1 : (alert('Passwords don\'t match'), false))">
+    <input type="hidden" name="key" value="<%= req.query.key %>" />
+    <table>
+      <tbody>
+        <tr>
+          <td>Email</td>
+          <td><input type="text" name="email" /></td>
+          <td>Private, used only to log in. Doesn't actually have to be an email address.</td>
+        </tr>
+        <tr>
+          <td>Username</td>
+          <td><input type="text" name="username" /></td>
+          <td>Public. Don't put any prefixes like ADMN or OFH.</td>
+        </tr>
+        <tr>
+          <td>Password</td>
+          <td><input type="password" name="password" /></td>
+          <td></td>
+        </tr>
+        <tr>
+          <td>Password Again</td>
+          <td><input type="password" name="passwordconfirm" /></td>
+          <td></td>
+        </tr>
+        <tr>
+          <td colspan="2" class="right">
+            <input type="submit" value="Login" />
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </form>
+  <%- await include("partials/footer.ejs", {req, res}) %>
+<%
+}
+%>

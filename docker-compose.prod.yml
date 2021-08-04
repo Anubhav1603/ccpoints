@@ -3,21 +3,26 @@ services:
   fwapoints:
     image: node:latest
     volumes:
-     - ./src:/app/src
-     - ./logs:/app/logs
+     - .:/app
     restart: always
     working_dir: /app/src
     entrypoint: "yarn start"
+    environment:
+      - SESSION_SECRET=changeme
+      - CLASH_API_TOKEN=changeme
+      - HEALTHCHECK_URL=changeme
   postgres:
     image: postgres:13-alpine
     volumes:
       - ./data:/var/lib/postgresql/data
+      - ./src/setup.sql:/docker-entrypoint-initdb.d/setup.sql
     environment:
       - POSTGRES_DB=fwapoints
       - POSTGRES_USER=fwapoints
       - POSTGRES_PASSWORD=fwapoints
 
-# nginx network managed externally
+# nginx network is managed externally on kuilin's server
+# forwards fwapoints.chocolateclash.com to fwapoints_fwapoints_1:3000 inside docker network
 networks:
   default:
     external:

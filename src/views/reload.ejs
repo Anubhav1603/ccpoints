@@ -1,0 +1,14 @@
+<%
+  const check = await requirePerm(req, "login");
+  if (check !== true) { %><%- check %><% }
+  else { %>
+    <%- await include("partials/header.ejs", {req, res, title: "Manual Reload"}) %>
+    <h3>Reload Clans</h3>
+    <p>This button makes this system redownload the list of FWA clans from ProudFWA.</p>
+    <p>It also recalculates every clan's points, though those logically should never get out of sync.</p>
+    <form action="do_reload" method="post">
+      <input type="submit" value="Reload ProudFWA" />
+    </form>
+    <%- await include("partials/footer.ejs", {req, res}) %>
+  <% }
+%>

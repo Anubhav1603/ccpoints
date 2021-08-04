@@ -1,0 +1,182 @@
+<%
+  // how long before user is recommended to redownload (all clans must have data younger than this)
+  // bypass this with the second button
+  const sensitivity = "3 hours";
+
+  const check = await requirePerm(req, "record");
+  if (check !== true) { %><%- check %><% }
+  else {
+    %>
+    <%- await include("partials/header.ejs", {req, res, title: "Record Sync Tool"}) %>
+    <h3>Record Sync Tool</h3>
+    <%
+      const running = req.query.running === "";
+      const {ct} = await db.one("select count(*) as ct from clans where active=true and (lastchecked is null or lastchecked < now() - interval '" + sensitivity + "');");
+      const {active} = await db.one("select count(*) as active from clans where active=true;");
+
+      // override get parameter to sync old data
+      if (+ct !== 0 && req.query.override !== "") {
+        %><p>Clash API progress: <tt><%= (active - ct) + "/" + active %></tt></p><%
+        if (!running) {
+          %>
+          <button onclick="this.disabled=true;addSearch('running');">Start Download</button>
+          <button onclick="this.disabled=true;addSearch('override');">Use Outdated Data</button>
+          <%
+        } else {
+          // === actually sync some clans ===
+          await db.tx("sync", async t => {
+            await t.none('lock table clans, transactions, wars in access exclusive mode;');
+
+            // 40 at a time, half of 80/sec rate limit
+            const tags = await t.any("select clantag from clans where active=true and (lastchecked is null or lastchecked < now() - interval '" + sensitivity + "') limit 40;");
+            await Promise.all(tags.map(async ({clantag}) => {
+              const data = await clashAPI("https://api.clashofclans.com/v1/clans/%23" + clantag + "/warlog");
+              if (data.reason && data.reason === "accessDenied") {
+                await t.none("update clans set logprivate=true, lastchecked=now() where clantag=$[clantag];", {clantag});
+                return;
+              }
+              if (!data || !data.items || !Array.isArray(data.items)) return;
+              if (data.length === 0) return;
+              data = data.items[0];
+
+              // clean up data
+              const dataObj = {};
+              let clan, opponent;
+              if (data.clan.tag.localeCompare(data.opponent.tag) < 0) {
+                clan = "a"; opponent = "b";
+              } else {
+                clan = "b"; opponent = "a";
+              }
+              dataObj[clan] = {
+                tag: formatTag(data.clan.tag),
+                active: true, // we only sync active clans
+                clanLevel: +data.clan.clanLevel,
+                badgeUrlLarge: data.clan.badgeUrls.large,
+                pct: parseInt(data.clan.destructionPercentage * 100),
+                name: data.clan.name,
+                stars: +data.clan.stars,
+                attacks: +data.clan.attacks,
+                expEarned: +data.clan.expEarned
+              };
+              dataObj[opponent] = {
+                tag: formatTag(data.opponent.tag),
+                // omit active, it will be updated when the opponent syncs, or never
+                clanLevel: +data.opponent.clanLevel,
+                badgeUrlLarge: data.opponent.badgeUrls.large,
+                pct: parseInt(data.opponent.destructionPercentage * 100),
+                name: data.opponent.name,
+                stars: +data.opponent.stars
+              };
+              dataObj.teamSize = +data.teamSize;
+              dataObj.result = data.result === "win" ? 1 : data.result === "lose" ? -1 : 0;
+              if (clan === "b") dataObj.result = -dataObj.result;
+
+              // insert or update into wars table
+              const {warid} = await t.one("insert into wars(ts, clanatag, clanbtag, data) values ($[ts], $[clanatag], $[clanbtag], $[data]) on conflict (clanatag, clanbtag, ts) do update set data=EXCLUDED.data || jsonb_build_object('a', (wars.data->'a') || (EXCLUDED.data->'a'), 'b', (wars.data->'b') || (EXCLUDED.data->'b')) returning warid;", {
+                  ts: data.endTime,
+                  clanatag: dataObj.a.tag,
+                  clanbtag: dataObj.b.tag,
+                  data: dataObj
+              });
+
+              // update clans table
+              await t.none("update clans set logprivate=false, lastchecked=now() where clantag=$[clantag];", {clantag});
+              await t.none("update clans set warid=$[warid] where clantag in ($[clanatag], $[clanbtag]);", {
+                  warid,
+                  clanatag: dataObj.a.tag,
+                  clanbtag: dataObj.b.tag
+              });
+            }));
+          });
+          %><button disabled>Start Download</button><script>setTimeout(function () { window.location.reload(); }, 1000);</script><%
+        }
+      } else {
+        // === syncing is complete ===
+        const threshold = +req.query.threshold || 1.5;
+        %>
+        <form action="do_resync" method="post">
+          <p>Sync is complete.</p>
+          <input type="submit" value="Force Redownload Data" />
+          <button type="button" onclick="addSearch('threshold='+prompt('How many days old before assuming it\'s too old to add?', '<%= threshold %>'))">Set Day Threshold</button>
+          <p>If Record is checked, then the point change in the last column will be applied to the clan. The checkbox is initially checked if the last war was within 48 hours and both clans are FWA clans.</p>
+          <p>(<span class="red">PWL</span>) means the clan has a private war log - but, if their opponent's war log is public, and is FWA, everything is fine. If not, their opponent is unknown, an error is printed. All links in this table open in a new tab.</p>
+        </form>
+        <form action="do_sync" method="post">
+          <% const clans = await db.any("select * from clans left join wars on wars.warid = clans.warid where active=true order by clanname asc;"); %>
+          <input type="hidden" name="tags" value="<%= clans.map(clan => clan.clantag).join(","); %>" />
+          <script>
+            if (window.location.search === "?running") window.location = "/sync";
+            function toggle(t) {
+              document.getElementById(t.id.split("_").shift() + "_value").disabled = !t.checked;
+            }
+          </script>
+          <table>
+            <thead>
+              <tr>
+                <td><b>Record</b></td>
+                <td><b>Clan Tag</b></td>
+                <td><b>Clan Name</b></td>
+                <td colspan="4"><b>Most Recent Finished War</b></td>
+                <td><b>Point Change</b></td>
+                <td></td>
+              </tr>
+            </thead>
+            <tbody>
+              <% for (let {clantag, clanname, ts, data, warid, logprivate, recorded} of clans) {
+                recorded = recorded ? '<span class="red">Warning: This war\'s points have already been recorded.</span>' : '';
+                if (data === null) {
+                  %>
+                  <tr>
+                    <td class="center"><input type="checkbox" name="<%= clantag %>_include" id="<%= clantag %>_include" onchange="toggle(this);" /></td>
+                    <td><%= clantag %></td>
+                    <td><a href="/clan?tag=<%= clantag %>" target="_blank"><%= clanname %></a><%- logprivate ? ' (<span class="red">PWL</span>)' : "" %></td>
+                    <td colspan="4"><span class="red">Error: Unknown opponent</span></td>
+                    <td>
+                      <input type="number" class="redgreen" style="width: 5rem;" name="<%= clantag %>_value" id="<%= clantag %>_value" value="0" disabled />
+                    </td>
+                    <td><%- recorded %></td>
+                  </tr>
+                  <%
+                } else {
+                  const days = (new Date() - new Date(ts)) / (1000*60*60*24);
+                  const opponent = data.a.tag === clantag ? "b" : "a";
+
+                  // only check ones whose end time is within threshold days and both are active
+                  const tooOld = days > threshold;
+                  const checked = (!tooOld) && data.a.active && data.b.active && !recorded;
+
+                  const points = opponent === "b" ? -data.result : data.result;
+                  const winlose = ["win", "draw", "lose"][points + 1];
+                  %>
+                  <tr>
+                    <td class="center"><input type="checkbox" name="<%= clantag %>_include" id="<%= clantag %>_include" <%= checked ? " checked" : "" %> onchange="toggle(this);" /></td>
+                    <td><label for="<%= clantag %>_include"><%= clantag %></label></td>
+                    <td><a href="/clan?tag=<%= clantag %>" target="_blank"><%= clanname %></a><%- logprivate ? ' (<span class="red">PWL</span>)' : "" %></td>
+                    <td><label for="<%= clantag %>_include"><span <%- tooOld ? ' class="red"' : '' %>><%= days.toFixed(0) + "d" + ((days%1)*24).toFixed(0) + "h" %> ago</span></label></td>
+                    <td><a href="/war?id=<%= warid %>" target="_blank">War #<%= warid %></a></td>
+                    <td><label for="<%= clantag %>_include"><%= winlose %></label></td>
+                    <td><label for="<%= clantag %>_include">
+                      <% if (!data[opponent].active) { %>
+                        <span class="red">vs. non-FWA</span>
+                      <% } else { %>
+                        vs. FWA
+                      <% } %>
+                    </label></td>
+                    <td>
+                      <input type="hidden" name="<%= clantag %>_warid" value="<%= warid %>" />
+                      <input type="number" class="redgreen" style="width: 5rem;" name="<%= clantag %>_value" id="<%= clantag %>_value" value="<%= points %>" <%= checked ? "" : " disabled" %> />
+                    </td>
+                    <td><%- recorded %></td>
+                  </tr>
+                <% } %>
+              <% } %>
+              <td colspan="8" class="right"><input type="submit" value="Add Sync Transactions" /></td>
+            </tbody>
+          </table>
+        </form>
+        <%
+      }
+    %>
+    <%- await include("partials/footer.ejs", {req, res}) %>
+  <% }
+%>

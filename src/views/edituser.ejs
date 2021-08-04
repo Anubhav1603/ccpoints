@@ -1,0 +1,39 @@
+<%
+const allPerms = [
+  ["all",     "Override to grant all permissions, even ones not yet added"],
+  ["login",   "Log in, view private notes, reload data from ProudFWA"],
+  ["record",  "Record sync, add/edit/delete transactions (sanctions/rewards), edit clan (zerowin/redzone)"],
+  ["manage",  "Edit user permissions, view audit log (by clan and by user)"],
+  ["update",  "Update system from Git"]
+];
+
+
+const check = await requirePerm(req, "manage");
+if (!isFinite(+req.query.id)) { %>User ID not provided<% }
+else if (check !== true) { %><%- check %><% }
+else {
+  const user = await db.oneOrNone("select * from users where userid=$[id]", {id: +req.query.id});
+  if (!user) { %>User not found.<% } else { %>
+    <%- await include("partials/header.ejs", {req, res, title: "Edit User " + user.name}) %>
+    <p>
+      <b>User ID</b>: <%= user.userid %><br />
+      <b>Name</b>: <%= user.name %><br />
+      <b>Email</b>: <%= user.email %><br />
+      <form action="do_edituser" method="post">
+        <b>Permissions</b>: <br />
+        <input type="hidden" name="userid" value="<%= user.userid %>" />
+        <br />
+        <% for (let [p, t] of allPerms) { %>
+          <label>
+            <input type="checkbox" name="<%= p %>" value="true" <%= user.perms.includes(p) ? "checked" : "" %>/>
+            <tt><%= p %></tt> - <%= t %>
+          </label>
+          <br />
+          <br />
+        <% } %>
+        <input type="submit" value="Update Permissions" />
+      </form>
+    </p>
+    <%- await include("partials/footer.ejs", {req, res}) %>
+  <% } %>
+<% } %>

@@ -1,0 +1,17 @@
+<%
+  const check = await requirePerm(req, "manage");
+  if (check !== true) { %><%- check %><% }
+  else {
+    const ct = (await db.one("select count(*) as ct from users;")).ct;
+    const buf = hmac().update(req.session.user.userid.toString()).update(ct.toString()).digest();
+    buf.writeInt32LE(req.session.user.userid);
+    const key = encodeURIComponent(buf.toString("base64"));
+%>
+    <%- await include("partials/header.ejs", {req, res, title: "Generate Register Link"}) %>
+    <h3>New User Registration Link</h3>
+    <p>To register a new user, give this link to them: <a href="/register?key=<%= key %>" target="_blank">https://<%= req.hostname %>/register?key=<%= key %></a></p>
+    <p>This link will only work for creating one next account.</p>
+    <%- await include("partials/footer.ejs", {req, res}) %>
+<%
+}
+%>

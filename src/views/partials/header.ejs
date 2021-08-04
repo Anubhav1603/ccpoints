@@ -1,0 +1,45 @@
+<!doctype html>
+<html>
+  <head>
+    <title><%= "FWA Points" + (locals.title ? ": " + title : "") %></title>
+    <script>
+      function load() {
+        function redgreen(t) {
+          var value;
+          if (t.tagName === "INPUT") value = +t.value;
+          else value = +t.innerText;
+          if (!isFinite(value) || value === 0) {
+            t.classList.remove("bg-red");
+            t.classList.remove("bg-green");
+          } else if (value > 0) {
+            t.classList.remove("bg-red");
+            t.classList.add("bg-green");
+          } else if (value < 0) {
+            t.classList.add("bg-red");
+            t.classList.remove("bg-green");
+          }
+        }
+        Array.from(document.querySelectorAll(".redgreen")).forEach(function (t) {
+          redgreen(t);
+          t.addEventListener('change', function () { redgreen(t); });
+        });
+      }
+      function addSearch(s) {
+        if (window.location.search === "" || window.location.search === "?") window.location.search = s;
+        else window.location.search += "&" + s;
+      }
+    </script>
+    <meta name="viewport" content="width=device-width, initial-scale=0.5">
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body onload="load();">
+    <h1>FWA Points Database</h1>
+    <p>
+      <a href="/">Home Page</a> |
+      <% if (req.session.user) { %>
+        <a href="/admin">Admin Menu</a> |
+        Logged in as: <%= req.session.user.name %> (<a href="/logout" onclick="location='/logout?to=' + encodeURIComponent(location.pathname + location.search);return false;">Logout</a>)
+      <% } else { %>
+        <a href="/login" onclick="location='/login?to=' + encodeURIComponent(location.pathname + location.search);return false;">Admin Login</a>
+      <% } %>
+    </p>

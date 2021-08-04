@@ -1,0 +1,48 @@
+<%
+  const check = await requirePerm(req, "manage");
+  if (check !== true) { %><%- check %><% }
+  else if (!req.query.limit) {
+    // add limit to url
+    %><script>
+      if (window.location.search === "") window.location.search = "limit=100";
+      else window.location.search += "&limit=100";
+    </script><%
+  }
+  else {
+    let query = "select * from auditlog left join users on users.userid=auditlog.userid";
+    if (req.query.clantag) query += " where auditlog.clantag=$[clantag]";
+    if (req.query.userid) query += " where auditlog.userid=$[userid]";
+    query += " order by ts desc limit $[limit];"
+    resp = await db.any(query, req.query);
+%>
+  <%- await include("partials/header.ejs", {req, res, title: "Audit Log"}) %>
+  <h3>Audit Log</h3>
+  <p>To filter by userid or clantag, go to Manage Users or View Clan respectively. To increase the 100 row limit, edit the URL.</p>
+  <table>
+    <thead>
+      <tr>
+        <td><b>Timestamp</b></td>
+        <td><b>User ID</b></td>
+        <td><b>User Name</b></td>
+        <td><b>Clan Tag</b></td>
+        <td><b>Action</b></td>
+        <td><b>Data</b></td>
+      </tr>
+    </thead>
+    <tbody>
+      <% for await (let {ts, userid, name, clantag, action, cdata} of resp) { %>
+        <tr>
+          <td><%= ts.toISOString() %></td>
+          <td><%= userid %></td>
+          <td><%= name %></td>
+          <td><%= clantag %></td>
+          <td><%= action %></td>
+          <td><tt><%= JSON.stringify(cdata) %></tt></td>
+        </tr>
+      <% } %>
+    </tbody>
+  </table>
+  <%- await include("partials/footer.ejs", {req, res}) %>
+<%
+}
+%>

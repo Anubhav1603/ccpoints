@@ -1,0 +1,61 @@
+<%
+  const check = await requirePerm(req, "record");
+
+  const trans = {}; //await db.oneOrNone("select * from transactions where transid=$[id]", req.query);
+  if (!trans) { %>Transaction not found.<% }
+  else if (check !== true) { %><%- check %><% }
+  else if (trans.deleted) { %>Transaction is deleted<% }
+  else {
+%>
+  <%- await include("partials/header.ejs", {req, res, title: "New Transaction"}) %>
+  <h3>Add New Transaction</h3>
+  <form action="/do_record" method="post">
+    <input type="hidden" name="transid" value="<%= trans.transid %>" />
+    <table>
+      <tbody>
+        <tr>
+          <td>Clan Tag</td>
+          <td><input type="text" name="clantag" id="clantag" value="<%= req.query.tag %>" /></td>
+          <td><button type="button" onclick="window.open('/clan?tag=' + document.getElementById('clantag').value);return false;">Check Tag</button></td>
+        </tr>
+        <tr>
+          <td>Timestamp</td>
+          <td><input type="text" name="ts" value="<%= new Date().toISOString() %>" /></td>
+          <td>Enter in <tt>YYYY-MM-DDTHH:mm:ss.sssZ</tt> format, UTC timezone</td>
+        </tr>
+        <tr>
+          <td>War ID</td>
+          <td><input type="number" name="warid" /></td>
+          <td>Must be a valid war ID, or empty. For manual entry, usually this is empty</td>
+        </tr>
+        <tr>
+          <td>Point Change</td>
+          <td><input type="number" class="redgreen" name="points" value="<%=
+            req.query.template === "sanction" ? "-1" :
+            req.query.template === "reward" ? "1" : "0"
+          %>" /></td>
+          <td>Clan point sum will automatically be recalculated</td>
+        </tr>
+        <tr>
+          <td>Public Note</td>
+          <td><textarea name="pubnote"><%=
+            req.query.template === "sanction" ? "Manually entered clan sanction" :
+            req.query.template === "reward" ? "Manually entered clan reward" : ""
+          %></textarea></td>
+          <td>Visible to everyone</td>
+        </tr>
+        <tr>
+          <td>Private Note</td>
+          <td><textarea name="privnote"></textarea></td>
+          <td>Visible to only to admins</td>
+        </tr>
+        <tr>
+          <td colspan="2" class="right">
+            <input type="submit" value="Add Transaction" />
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </form>
+  <% } %>
+<%- await include("partials/footer.ejs", {req, res}) %>

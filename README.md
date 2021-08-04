@@ -2,9 +2,11 @@
 
 FWA Points website project. Live at https://fwapoints.chocolateclash.com
 
-## System Requirements
+## Environment
 
 Since everything is dockerized, only docker and docker-compose are required to get everything running.
+
+Copy `docker-compose.dev.yml` or `docker-compose.prod.yml` to `docker-compose.yml` and then modify things as needed. Then, `docker-compose up -d` to start. 
 
 ## License & CLA
 

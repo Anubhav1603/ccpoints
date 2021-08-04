@@ -1,0 +1,38 @@
+<%
+  const check = await requirePerm(req, "manage");
+  if (check !== true) { %><%- check %><% }
+  else {
+%>
+  <%- await include("partials/header.ejs", {req, res, title: "Manage Users"}) %>
+  <h3>Manage Users</h3>
+  <p>To generate create an account, <a href="/newuser">generate a registration link</a> and then ask the user to go to it.</p>
+  <p>Users will be created with no permissions. Grant the login permission to allow logging in.</p>
+  <br />
+  <table>
+    <thead>
+      <tr>
+        <td><b>ID</b></td>
+        <td><b>Name</b></td>
+        <td><b>Email</b></td>
+        <td><b>Permissions</b></td>
+        <td></td>
+        <td></td>
+      </tr>
+    </thead>
+    <tbody>
+      <% for await (let {userid, name, email, apikey, perms} of await db.any("select * from users order by userid asc;")) { %>
+        <tr>
+          <td><%= userid %></td>
+          <td><%= name %></td>
+          <td><%= email %></td>
+          <td><%= apikey ? "(API account)" : perms.length ? perms.join(", ") : "(None)" %></td>
+          <td><% if (!apikey) { %>(<a href="/edituser?id=<%= userid %>">Edit</a>)<% } %></td>
+          <td>(<a href="/audit?userid=<%= userid %>">Audit Log</a>)</td>
+        </tr>
+      <% } %>
+    </tbody>
+  </table>
+  <%- await include("partials/footer.ejs", {req, res}) %>
+<%
+}
+%>

@@ -1,0 +1,54 @@
+<%
+  const check = await requirePerm(req, "record");
+
+  const trans = await db.oneOrNone("select * from transactions where transid=$[id]", req.query);
+  if (!trans) { %>Transaction not found.<% }
+  else if (check !== true) { %><%- check %><% }
+  else if (trans.deleted) { %>Transaction is deleted<% }
+  else {
+%>
+  <%- await include("partials/header.ejs", {req, res, title: "Confirm Delete Transaction"}) %>
+  <h3>Delete Transaction</h3>
+  <form action="/do_deltransaction" method="post">
+    <input type="hidden" name="transid" value="<%= trans.transid %>" />
+    <table>
+      <tbody>
+        <tr>
+          <td>Transaction ID</td>
+          <td><input type="text" value="<%= trans.transid %>" disabled /></td>
+        </tr>
+        <tr>
+          <td>Clan Tag</td>
+          <td><input type="text" value="<%= trans.clantag %>" disabled /></td>
+        </tr>
+        <tr>
+          <td>Timestamp</td>
+          <td><input type="text" value="<%= trans.ts.toISOString() %>" disabled /></td>
+        </tr>
+        <tr>
+          <td>War ID</td>
+          <td><input type="number" value="<%= trans.warid %>" disabled /></td>
+        </tr>
+        <tr>
+          <td>Point Change</td>
+          <td><input type="number" class="redgreen" value="<%= trans.points %>" disabled /></td>
+        </tr>
+        <tr>
+          <td>Public Note</td>
+          <td><textarea name="pubnote" disabled ><%= trans.pubnote %></textarea></td>
+        </tr>
+        <tr>
+          <td>Private Note</td>
+          <td><textarea name="privnote" disabled ><%= trans.privnote %></textarea></td>
+        </tr>
+        <tr>
+          <td colspan="2" class="right">
+            <div style="color: red;">Are you sure you want to delete this transaction?</div>
+            <input type="submit" value="Delete" />
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </form>
+  <% } %>
+<%- await include("partials/footer.ejs", {req, res}) %>
