@@ -30,7 +30,13 @@
             // 40 at a time, half of 80/sec rate limit
             const tags = await t.any("select clantag from clans where active=true and (lastchecked is null or lastchecked < now() - interval '" + sensitivity + "') limit 40;");
             await Promise.all(tags.map(async ({clantag}) => {
-              const data = await clashAPI("https://api.clashofclans.com/v1/clans/%23" + clantag + "/warlog");
+              let data;
+              try {
+                  data = await clashAPI("https://api.clashofclans.com/v1/clans/%23" + clantag + "/warlog");
+              } catch (e) {
+                  if (e.message === "Error: requestThrottled") return;
+                  throw e;
+              }
               if (data.reason && data.reason === "accessDenied") {
                 await t.none("update clans set logprivate=true, lastchecked=now() where clantag=$[clantag];", {clantag});
                 return;
