@@ -34,6 +34,11 @@
           <td>Must be a valid war ID, or empty</td>
         </tr>
         <tr>
+          <td>Automatic Reason</td>
+          <td><input type="text" value="<%= trans.reason %>" disabled /></td>
+          <td>If this transaction was added automatically, this tags it with why</td>
+        </tr>
+        <tr>
           <td>Point Change</td>
           <td><input type="number" class="redgreen" name="points" value="<%= trans.points %>" /></td>
           <td>Clan point sum will automatically be recalculated</td>

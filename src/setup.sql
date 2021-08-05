@@ -116,6 +116,10 @@ create table transactions (
     pubnote text null,
     privnote text null,
     points int not null,
+    reason text null,
+        /* reason has import or sync or zerowin or redzone
+            if added for that reason automatically
+            then they can be removed automatically easily */
     deleted boolean default false
 );
 create index on transactions (clantag, ts, transid);

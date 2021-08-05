@@ -32,7 +32,7 @@ module.exports = async (req, res) => {
                 diff: points
             });
             if (!clan.active) throw new Error("Sync tried to add transaction for non-active clan " + tag);
-            await t.none("insert into transactions (clantag, ts, warid, points) values ($[clantag], now(), $[warid], $[points]);", {
+            await t.none("insert into transactions (clantag, ts, warid, points, reason) values ($[clantag], now(), $[warid], $[points], 'sync');", {
                 clantag: tag, warid, points
             });
 
@@ -43,8 +43,7 @@ module.exports = async (req, res) => {
                     clantag: tag,
                     diff: points
                 });
-                if (!clan.active) throw new Error("Sync tried to add transaction for non-active clan " + tag);
-                await t.none("insert into transactions (clantag, ts, warid, points, pubnote) values ($[clantag], now(), $[warid], $[points], $[pubnote]);", {
+                await t.none("insert into transactions (clantag, ts, warid, points, pubnote, reason) values ($[clantag], now(), $[warid], $[points], $[pubnote], 'redzone');", {
                     clantag: tag, warid, points, pubnote: "Automatic correction to -50 due to red zone"
                 });
             }
@@ -54,8 +53,7 @@ module.exports = async (req, res) => {
                     clantag: tag,
                     diff: points
                 });
-                if (!clan.active) throw new Error("Sync tried to add transaction for non-active clan " + tag);
-                await t.none("insert into transactions (clantag, ts, warid, points, pubnote) values ($[clantag], now(), $[warid], $[points], $[pubnote]);", {
+                await t.none("insert into transactions (clantag, ts, warid, points, pubnote, reason) values ($[clantag], now(), $[warid], $[points], $[pubnote], 'zerowin');", {
                     clantag: tag, warid, points, pubnote: "Automatic correction to -100 due to zero win"
                 });
             }

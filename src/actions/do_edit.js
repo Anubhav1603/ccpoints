@@ -16,7 +16,7 @@ module.exports = async (req, res) => {
         if (req.body.zerowin) {
             special.push("zerowin");
             if (points !== -100) {
-                await t.none("insert into transactions (clantag, pubnote, points) values ($[clantag], 'Automatic points change upon becoming zero-win', $[points])",
+                await t.none("insert into transactions (clantag, pubnote, points, reason) values ($[clantag], 'Automatic points change upon becoming zero-win', $[points], 'zerowin')",
                     { clantag: prev.clantag, points: -100 - prev.points });
                 points = -100;
             }
@@ -24,9 +24,17 @@ module.exports = async (req, res) => {
         if (req.body.redzone) {
             special.push("redzone");
             if (points !== -50) {
-                await t.none("insert into transactions (clantag, pubnote, points) values ($[clantag], 'Automatic points change upon entering red zone', $[points])",
+                await t.none("insert into transactions (clantag, pubnote, points, reason) values ($[clantag], 'Automatic points change upon entering red zone', $[points], 'redzone')",
                     { clantag: prev.clantag, points: -50 - prev.points });
                 points = -50;
+            }
+        } else {
+            // delete redzone transactions
+            const deletions = await t.any("update transactions set deleted=true where clantag=$[clantag] and reason='redzone' and deleted=false returning points;",
+                { clantag: prev.clantag });
+            if (deletions.length) {
+                const sum = deletions.reduce((acc, e) => acc + e.points, 0);
+                points -= sum;
             }
         }
 
