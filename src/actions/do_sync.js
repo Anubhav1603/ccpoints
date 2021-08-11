@@ -33,9 +33,9 @@ module.exports = async (req, res) => {
 
             // special cases: do not modify points for clans in red zone or which are zero win
             if (clan.special.includes("redzone") || clan.special.includes("zerowin")) {
-                note = "Point value zeroed from " + points + " due to ";
-                if (clan.special.includes("redzone")) note += "red zone ";
-                if (clan.special.includes("zerowin")) note += "no win "; // if both will say red zone no win status
+                note = "Point value zeroed from " + points + " due to";
+                if (clan.special.includes("redzone")) note += " red zone";
+                if (clan.special.includes("zerowin")) note += " no win"; // if both will say red zone no win status
                 note += " status";
                 points = 0;
             }
