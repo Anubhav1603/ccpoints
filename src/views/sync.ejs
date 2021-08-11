@@ -29,7 +29,10 @@
 
             // 40 at a time, half of 80/sec rate limit
             const tags = await t.any("select clantag from clans where active=true and (lastchecked is null or lastchecked < now() - interval '" + sensitivity + "') limit 40;");
+            // for (let {clantag} of tags) { await (async () => { // uncomment to replace parallel line to debug
             await Promise.all(tags.map(async ({clantag}) => {
+              // note: returning from this function makes a clan get retried, so only do for ephemeral errors
+              // todo: currently the only way to skip a clan permanently for error reasons is to mark it as PWL
               let data;
               try {
                   data = await clashAPI("https://api.clashofclans.com/v1/clans/%23" + clantag + "/warlog");
@@ -43,7 +46,14 @@
               }
               if (!data || !data.items || !Array.isArray(data.items)) return;
               if (data.length === 0) return;
-              data = data.items[0];
+              data = data.items.filter(e => e.result && e.opponent.tag)[0];
+              if (!data) {
+                // there are no wars in the war log
+                // this is exceedingly unlikely (fresh new clan newly in fwa) so we just mark it as PWL
+                // and admins can manually figure it out
+                await t.none("update clans set logprivate=true, lastchecked=now() where clantag=$[clantag];", {clantag});
+                return;
+              }
 
               // clean up data
               const dataObj = {};
@@ -93,6 +103,7 @@
                   clanbtag: dataObj.b.tag
               });
             }));
+            // })()} // uncomment to replace parallel line to debug
           });
           %><button disabled>Start Download</button><script>setTimeout(function () { window.location.reload(); }, 1000);</script><%
         }
