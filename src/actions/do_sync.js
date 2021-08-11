@@ -17,9 +17,10 @@ module.exports = async (req, res) => {
             if (!req.body[tag + "_include"]) return;
             count++;
 
-            const points = +req.body[tag + "_value"];
+            let points = +req.body[tag + "_value"];
             if (!isFinite(points)) throw new Error("Points value not numeric for " + tag);
             let warid = req.body[tag + "_warid"];
+            let note = null;
 
             if (warid === "") warid = null;
             else {
@@ -27,36 +28,26 @@ module.exports = async (req, res) => {
                 if (!isFinite(warid)) throw new Error("War ID value not numeric or null for " + tag);
             }
 
-            let clan = await t.one("update clans set points=points+$[diff] where clantag=$[clantag] returning *;", {
+            let clan = await t.one("select * from clans where clantag=$[clantag];", { clantag: tag });
+            if (!clan.active) throw new Error("Sync tried to add transaction for non-active clan " + tag);
+
+            // special cases: do not modify points for clans in red zone or which are zero win
+            if (clan.special.includes("redzone") || clan.special.includes("zerowin")) {
+                note = "Point value zeroed from " + points + " due to ";
+                if (clan.special.includes("redzone")) note += "red zone ";
+                if (clan.special.includes("zerowin")) note += "no win "; // if both will say red zone no win status
+                note += " status";
+                points = 0;
+            }
+
+            clan = await t.one("update clans set points=points+$[diff] where clantag=$[clantag] returning *;", {
                 clantag: tag,
                 diff: points
             });
-            if (!clan.active) throw new Error("Sync tried to add transaction for non-active clan " + tag);
-            await t.none("insert into transactions (clantag, ts, warid, points, reason) values ($[clantag], now(), $[warid], $[points], 'sync');", {
-                clantag: tag, warid, points
-            });
 
-            // special cases
-            if (clan.special.includes("redzone") && points !== 0) {
-                const points = -50 - clan.points;
-                clan = await t.one("update clans set points=points+$[diff] where clantag=$[clantag] returning *;", {
-                    clantag: tag,
-                    diff: points
-                });
-                await t.none("insert into transactions (clantag, ts, warid, points, pubnote, reason) values ($[clantag], now(), $[warid], $[points], $[pubnote], 'redzone');", {
-                    clantag: tag, warid, points, pubnote: "Automatic correction to -50 due to red zone"
-                });
-            }
-            if (clan.special.includes("zerowin") && points !== 0) {
-                const points = -100 - clan.points;
-                clan = await t.one("update clans set points=points+$[diff] where clantag=$[clantag] returning *;", {
-                    clantag: tag,
-                    diff: points
-                });
-                await t.none("insert into transactions (clantag, ts, warid, points, pubnote, reason) values ($[clantag], now(), $[warid], $[points], $[pubnote], 'zerowin');", {
-                    clantag: tag, warid, points, pubnote: "Automatic correction to -100 due to zero win"
-                });
-            }
+            await t.none("insert into transactions (clantag, ts, warid, points, reason, pubnote) values ($[clantag], now(), $[warid], $[points], 'sync', $[note]);", {
+                clantag: tag, warid, points, note
+            });
 
             // set war as recorded
             await t.none("update wars set recorded=true where warid=$[warid];", {warid});

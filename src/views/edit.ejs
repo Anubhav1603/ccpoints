@@ -36,12 +36,12 @@
         <tr>
           <td><label for="zerowin">Zero Win</label></td>
           <td><input type="checkbox" id="zerowin" name="zerowin" value="true" <%- clan.special.includes("zerowin") ? "checked" : "" %> /></td>
-          <td>If this is checked, a transaction will be generated setting points to -100 every sync. If it is unchecked, then those transactions will be deleted automatically.</td>
+          <td>If this is checked, a transaction will be generated setting points to -100. If it is unchecked, that transaction will be automatically deleted. During the time a clan is zerowin, all sync transactions will have zero effective points</td>
         </tr>
         <tr>
           <td><label for="redzone">Red Zone</label></td>
           <td><input type="checkbox" id="redzone" name="redzone" value="true" <%- clan.special.includes("redzone") ? "checked" : "" %> /></td>
-          <td>If this is checked, a transaction will be generated setting points to -50 every sync. If it is unchecked, then those transactions will be deleted automatically.</td>
+          <td>If this is checked, a transaction will be generated setting points to -50. If it is unchecked, that transaction will be automatically deleted. During the time a clan is redzone, all sync transactions will have zero effective points</td>
         </tr>
         <tr>
           <td></td>
