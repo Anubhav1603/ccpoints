@@ -109,7 +109,7 @@
         }
       } else {
         // === syncing is complete ===
-        const threshold = +req.query.threshold || 1.5;
+        const threshold = +req.query.threshold || 4;
         %>
         <form action="do_resync" method="post">
           <p>Sync is complete.</p>
