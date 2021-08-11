@@ -24,9 +24,23 @@
           t.addEventListener('change', function () { redgreen(t); });
         });
       }
-      function addSearch(s) {
-        if (window.location.search === "" || window.location.search === "?") window.location.search = s;
-        else window.location.search += "&" + s;
+      function addSearch(key, value, replace) {
+        // unfortunately caniuse URLSearchParams is only 95% at this moment
+        // (plus it makes value-less entries ugly with a trailing =)
+        // so let's do this manually
+        key = encodeURIComponent(key);
+        value = value === undefined ? null : encodeURIComponent(value);
+
+        var entries = location.search.substr(1);
+        if (entries.length === 0) entries = [];
+        else entries = entries.split("&");
+        entries = entries.filter(function (entry) {
+          return !(entry === key || entry.startsWith(key + "="));
+        });
+        if (value === null) entries.push(key);
+        else entries.push(key + "=" + value);
+
+        window.location[!!replace ? "replace" : "assign"](window.location.pathname + "?" + entries.join("&"));
       }
     </script>
     <meta name="viewport" content="width=device-width, initial-scale=0.5">
