@@ -49,8 +49,10 @@ module.exports = async (req, res) => {
                 clantag, warid, points, note
             });
 
-            // set war as recorded
-            await t.none("update wars set recorded=true where warid=$[warid];", {warid});
+            // set war as recorded for this side
+            const war = await t.one("select clanatag, clanbtag from wars where warid=$[warid];", {warid});
+            if (war.clanatag === clantag) await t.none("update wars set recordeda=true where warid=$[warid];", {warid});
+            if (war.clanbtag === clantag) await t.none("update wars set recordedb=true where warid=$[warid];", {warid});
         }));
 
         await t.none("insert into auditlog (userid, action, cdata) values ($[userid], 'sync', $[cdata:json]);", {

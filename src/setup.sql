@@ -88,7 +88,8 @@ create table wars (
     ts timestamp with time zone not null, -- endTime
     clanatag text not null,
     clanbtag text not null, -- nb: no foreign key! may not exist!
-    recorded boolean not null default false,
+    recordeda boolean not null default false,
+    recordedb boolean not null default false,
     data jsonb not null
         /* data has:
             a: [data]

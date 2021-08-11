@@ -115,7 +115,7 @@
           <p>Sync is complete.</p>
           <input type="submit" value="Force Redownload Data" />
           <button type="button" onclick="addSearch('threshold',prompt('How many days old before assuming it\'s too old to add?', '<%= threshold %>'))">Set Day Threshold</button>
-          <p>If Record is checked, then the point change in the last column will be applied to the clan. The checkbox is initially checked if the last war was within 48 hours and both clans are FWA clans.</p>
+          <p>If Record is checked, then the point change in the last column will be applied to the clan. The checkbox is initially checked if the last war was within 48 hours and both clans are FWA clans (and the war was not yet recorded for that side).</p>
           <p>(<span class="red">PWL</span>) means the clan has a private war log - but, if their opponent's war log is public, and is FWA, everything is fine. If not, their opponent is unknown, an error is printed. All links in this table open in a new tab.</p>
           <p>Treat clans with special considerations (red zone or zero win) the same when working on this page. When this form is submitted, the sync transaction for those clans will be zeroed with a special note, so those clans will stay at their respective amounts.</p>
         </form>
@@ -140,8 +140,14 @@
               </tr>
             </thead>
             <tbody>
-              <% for (let {clantag, clanname, ts, data, warid, logprivate, recorded} of clans) {
-                recorded = recorded ? '<span class="red">Warning: This war\'s points have already been recorded.</span>' : '';
+              <% for (let {clantag, clanname, ts, data, warid, logprivate, clanatag, clanbtag, recordeda, recordedb} of clans) {
+                // note: technically, clantag cound be neither clanatag nor clanbtag
+                // this is because warid is a freeform field users can edit, and they may edit a war that a clan is not a part of
+                // in this case, we do not track recorded
+                let recorded = false;
+                if (clanatag === clantag) recorded = recordeda;
+                if (clanbtag === clantag) recorded = recordedb;
+                recorded = recorded ? '<span class="red">Warning: This war\'s result has already been recorded on this clan.</span>' : '';
                 if (data === null) {
                   %>
                   <tr>
