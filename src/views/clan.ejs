@@ -53,14 +53,24 @@
       </tr>
     </thead>
     <tbody>
-      <% for (let row of await db.any("select * from transactions where clantag=$[clantag]" +
-                    (seeDeleted ? "" : " and deleted=false") + " order by ts desc, transid desc;", clan)) { %>
+      <%
+      let result = await db.any("select transactions.*, wars.clanatag, wars.clanbtag, wars.data->'result' as result" +
+            " from transactions left join wars on transactions.warid=wars.warid where clantag=$[clantag]" +
+            (seeDeleted ? "" : " and deleted=false") +
+            " order by ts desc, transid desc;", clan);
+      for (let row of result) {
+          let war = "";
+          if (row.warid) {
+            war = '<a href="war?id=' + row.warid + '">War #' + row.warid + '</a> ';
+            let {result} = row;
+            if (row.clanbtag === clan.clantag) result = -result;
+            war += "(" + ["lose", "draw", "win"][result + 1] + ")";
+          }
+          %>
         <tr<%- row.deleted ? " class=\"deleted bg-gray\" style=\"text-decoration: line-through;\"" : "" %>>
           <% if (seeEdit) { %><td><%= row.transid %></td><% } %>
           <td><%= row.ts.toISOString() %></td>
-          <td><%- row.warid ? 
-            '<a href="war?id=' + row.warid + '">War #' + row.warid + '</a>'
-            : ""%></td>
+          <td><%- war %></td>
           <td class="center redgreen"><%= row.points %></td>
           <td><%= row.pubnote %></td>
           <% if (seePrivate && row.privnote) { %><td class="bg-gray">Private Note: <%= row.privnote %></td><% }
