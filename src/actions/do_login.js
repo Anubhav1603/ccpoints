@@ -3,7 +3,7 @@ const {requirePerm, setValid} = require("../helpers.js");
 
 module.exports = async (req, res) => {
     await db.tx("do_login", async t => {
-        let resp = await t.oneOrNone("select *, password = crypt($[password], password) as pw from users where email=$[email]", req.body);
+        let resp = await t.oneOrNone("select *, password = crypt($[password], password) as pw from users where email=lower($[email])", req.body);
         if (!resp || !resp.pw) return res.send("Bad login");
 
         const {password:_, pw: _pw, ...user} = resp;

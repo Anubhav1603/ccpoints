@@ -17,7 +17,7 @@ module.exports = async (req, res) => {
             throw new Error("");
         }
 
-        const {password:_pass, ...user} = await t.one("update users set email=$[email], name=$[username] where userid=$[userid] returning *", req.body);
+        const {password:_pass, ...user} = await t.one("update users set email=lower($[email]), name=$[username] where userid=$[userid] returning *", req.body);
 
         const passwordChanged = req.body.password !== "";
         if (passwordChanged) {

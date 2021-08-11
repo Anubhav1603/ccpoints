@@ -20,7 +20,7 @@ module.exports = (req, res, next) => (async () => {
 
         let user;
         try {
-            user = await t.one("insert into users (name, email, password) values ($[username], $[email], crypt($[password], gen_salt('bf'))) returning userid, name, email, perms, apikey;", req.body);
+            user = await t.one("insert into users (name, email, password) values ($[username], lower($[email]), crypt($[password], gen_salt('bf'))) returning userid, name, email, perms, apikey;", req.body);
         } catch (e) {
             if (e.code === "23505") return res.send("Username or email already exists");
             throw e;
