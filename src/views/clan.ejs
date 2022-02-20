@@ -18,8 +18,6 @@
     <b>Official</b>: <%= clan.active ? "Yes" : "No" %>
   </p>
   <%
-    /*
-    // TODO: win determination
     const data = await clashAPI("https://api.clashofclans.com/v1/clans/%23" + clan.clantag + "/currentwar");
     if (data.reason && data.reason === "accessDenied") {
       %>
@@ -28,11 +26,48 @@
       </p>
       <%
     }
+    if (data.state === "preparation" || data.state === "inWar") {
+      let result = await db.oneOrNone("select * from clans where clantag=$[clantag]", {clantag: formatTag(data.opponent.tag)});
+      const otag = formatTag(data.opponent.tag);
+      const oname = data.opponent.name;
+      %>
+      <p class="winner-box">
+        <b>Current War</b> vs. <%= oname %> <%
+          if (result) { %>(<a href="/clan?tag=<%= otag %>"><%= otag %></a>)<% }
+          else { %>(<%= otag %>)<% }
+          if (result && result.active) {
+            %> is an <b>official match</b><br /><br /><%
+            // calculate winner
+            if (clan.points < result.points) {
+              %>This clan <b>wins the war</b> by points (%><%= clan.points + " < " + result.points %>)<%
+            } else if (clan.points > result.points) {
+              %>This clan <b>loses the war</b> by points (%><%= clan.points + " > " + result.points %>)<%
+            } else {
+              // seeded random using hmac
+              const pair = ([clan.clantag, otag]).sort();
+              const seed = data.preparationStartTime + "," + pair.join(",");
+              const hash = hmac().update(seed).digest();
+              const winner = pair[hash[0] & 1];
+              if (winner === clan.clantag) {
+                %>This clan <b>wins the war</b> by random coin flip (%><%= clan.points + " = " + result.points %>)<%
+              } else {
+                %>This clan <b>loses the war</b> by random coin flip (%><%= clan.points + " = " + result.points %>)<%
+              }
+              %> (<a href="#show" onclick="document.getElementById('flipdetails').style.display='inline'">Show Proof</a>)
+              <span id="flipdetails" style="display: none;"><br /><br />
+              Hashed data: <tt><%= seed %></tt><br />
+              Result hash: <tt><%= hash.toString('hex') %></tt><br />
+              Sorted tags: <tt><%= JSON.stringify(pair) %></tt>
+              </span><%;
+            }
+          } else {
+            %> is a mismatch<%
+          }
+        %>
+      </p>
+      <%
+    }
     %>
-    <p<%- data.state !== "preparation" ? " class=\"winner-box\"" : "" %>>
-      <b>Current War</b>: 
-    </p>
-    <% */ %>
   <% /* TODO: pagination */ %>
   <b>Clan Point History: </b>
     <% if (seeEdit) { %> (<a href="record?tag=<%= clan.clantag %>">Add Transaction</a>/<a href="record?tag=<%= clan.clantag %>&template=sanction">Sanction</a>/<a href="record?tag=<%= clan.clantag %>&template=reward">Reward</a>)<% } %>
