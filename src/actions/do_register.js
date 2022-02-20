@@ -12,7 +12,7 @@ module.exports = (req, res, next) => (async () => {
 
             const ct = (await t.one("select count(*) as ct from users;")).ct;
             const buf = hmac().update(userid.toString()).update(ct.toString()).digest();
-            if (!Buffer.compare(buf, givenBuf.slice(4))) throw "";
+            if (Buffer.compare(buf.slice(4), givenBuf.slice(4))) throw "";
         } catch (e) {
             console.log("Registration error", e);
             return res.send("Bad or expired registration key");

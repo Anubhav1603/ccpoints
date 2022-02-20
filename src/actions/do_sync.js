@@ -31,15 +31,6 @@ module.exports = async (req, res) => {
             let clan = await t.one("select * from clans where clantag=$[clantag];", { clantag });
             if (!clan.active) throw new Error("Sync tried to add transaction for non-active clan " + clantag);
 
-            // special cases: do not modify points for clans in red zone or which are zero win
-            if (clan.special.includes("redzone") || clan.special.includes("zerowin")) {
-                note = "Point value zeroed from " + points + " due to";
-                if (clan.special.includes("redzone")) note += " red zone";
-                if (clan.special.includes("zerowin")) note += " no win"; // if both will say red zone no win status
-                note += " status";
-                points = 0;
-            }
-
             clan = await t.one("update clans set points=points+$[diff] where clantag=$[clantag] returning *;", {
                 clantag,
                 diff: points

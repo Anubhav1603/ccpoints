@@ -1,12 +1,16 @@
-# fwapoints
+# CC Points System
 
-FWA Points website project. Live at https://fwapoints.chocolateclash.com
+CC Points System is a Clash of Clans war farming points tracker made by kuilin.
 
-## Environment
+## Dev Environment
 
 Since everything is dockerized, only docker and docker-compose are required to get everything running.
 
-Copy `docker-compose.dev.yml` or `docker-compose.prod.yml` to `docker-compose.yml` and then modify things as needed. Then, `docker-compose up -d` to start. 
+Copy `docker-compose.dev.yml` or `docker-compose.prod.yml` to `docker-compose.yml` and then modify them as needed. Then, `docker-compose up -d` to start.
+
+## Issues & Requests
+
+If you want to suggest a feature request, or file a bug, please [create an issue](https://github.com/likuilin/ccpoints/issues/new) on github. Pull requests are also appreciated.
 
 ## License
 

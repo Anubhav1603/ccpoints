@@ -1,16 +1,12 @@
 <%
   const check = await requirePerm(req, "record");
 
-  const trans = {}; //await db.oneOrNone("select * from transactions where transid=$[id]", req.query);
-  if (!trans) { %>Transaction not found.<% }
-  else if (check !== true) { %><%- check %><% }
-  else if (trans.deleted) { %>Transaction is deleted<% }
+  if (check !== true) { %><%- check %><% }
   else {
 %>
   <%- await include("partials/header.ejs", {req, res, title: "New Transaction"}) %>
   <h3>Add New Transaction</h3>
   <form action="/do_record" method="post">
-    <input type="hidden" name="transid" value="<%= trans.transid %>" />
     <table>
       <tbody>
         <tr>

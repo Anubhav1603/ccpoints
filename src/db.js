@@ -23,10 +23,10 @@ monitor.attach(options, ["error", "query", "transact"]);
 const pgp = pgpromise(options);
 
 const db = pgp({
-    user: "fwapoints",
-    password: "fwapoints",
-    database: "fwapoints",
-    host: "fwapoints_postgres_1",
+    user: "ccpoints",
+    password: "ccpoints",
+    database: "ccpoints",
+    host: "postgres",
     port: 5432
 });
 

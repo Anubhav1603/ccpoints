@@ -1,6 +1,6 @@
 version: "3"
 services:
-  fwapoints:
+  ccpoints:
     image: node:latest
     volumes:
      - .:/app
@@ -18,14 +18,15 @@ services:
     image: postgres:13-alpine
     volumes:
       - ./data:/var/lib/postgresql/data
-      - ./src/setup.sql:/docker-entrypoint-initdb.d/setup.sql
+      - ./src/migrations:/docker-entrypoint-initdb.d:ro
     environment:
-      - POSTGRES_DB=fwapoints
-      - POSTGRES_USER=fwapoints
-      - POSTGRES_PASSWORD=fwapoints
+      - POSTGRES_DB=ccpoints
+      - POSTGRES_USER=ccpoints
+      - POSTGRES_PASSWORD=ccpoints
 
 # nginx network is managed externally on kuilin's server
-# forwards fwapoints.chocolateclash.com to fwapoints_fwapoints_1:3000 inside docker network
+# forwards incoming requests to ccpoints_ccpoints_1:3000 inside docker network
+# your setup may vary of course
 networks:
   nginx:
     external: true

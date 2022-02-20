@@ -4,7 +4,7 @@
   else { %>
     <%- await include("partials/header.ejs", {req, res, title: "Update System"}) %>
     <h3>Update System</h3>
-    <p>This button makes this system re-clone itself from the <a href="https://github.com/likuilin/fwapoints" target="_blank">source code</a> and attempt to reload.</p>
+    <p>This button makes this system re-clone itself from the <a href="https://github.com/likuilin/ccpoints" target="_blank">source code</a> and attempt to reload.</p>
     <p>Warning: If the server fails to start up, it will need to be fixed manually.</p>
     <form action="do_update" method="post">
       <input type="submit" value="Update Server" />

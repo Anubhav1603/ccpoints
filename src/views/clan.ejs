@@ -15,10 +15,7 @@
     <br />
     <b>Point Balance</b>: <%= clan.points %><br />
     <br />
-    <b>Active FWA</b>: <%= clan.active ? "Yes" : "No" %> |
-    <b>Zero Win</b>: <%= clan.special.includes("zerowin") ? "Yes" : "No" %> |
-    <b>Red Zone</b>: <%= clan.special.includes("redzone") ? "Yes" : "No" %>
-    <% if (seeEdit) { %>(<a href="edit?tag=<%= clan.clantag %>">Edit Clan Details</a>)<br /><% } %>
+    <b>Official</b>: <%= clan.active ? "Yes" : "No" %>
   </p>
   <%
     /*
@@ -36,6 +33,7 @@
       <b>Current War</b>: 
     </p>
     <% */ %>
+  <% /* TODO: pagination */ %>
   <b>Clan Point History: </b>
     <% if (seeEdit) { %> (<a href="record?tag=<%= clan.clantag %>">Add Transaction</a>/<a href="record?tag=<%= clan.clantag %>&template=sanction">Sanction</a>/<a href="record?tag=<%= clan.clantag %>&template=reward">Reward</a>)<% } %>
     <% if (seePrivate && !seeDeleted) { %> (<a href="clan?tag=<%= clan.clantag %>&deleted">See Deleted</a>)<% } %>

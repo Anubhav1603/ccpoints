@@ -1,5 +1,4 @@
 const fetch = require("node-fetch");
-const csv = require("csv-parse");
 
 const {db, pgp} = require("../db.js");
 const {failLog, formatTag, goBack, requirePerm} = require("../helpers.js");
@@ -13,23 +12,16 @@ module.exports = async (req, res) => {
     await db.tx("do_reload", async t => {
         await failLog(req, db, t, "reload");
 
-        const resp = await fetch("https://docs.google.com/spreadsheets/d/1Qb21_tUN-GMIiAoGDaR9xvnNF78xcTZwhbWAAG5XZWU/export?format=csv");
+        const resp = await (await fetch("https://chocolateclash.com/cc_n/_export.php?m=points_gfl")).json();
+        const values = resp.map(([tag, name]) => ({
+            clantag: formatTag(tag),
+            clanname: name,
+            active: true
+        }));
 
         await t.none("lock table clans, transactions in access exclusive mode;");
         await t.none("update clans set active=false;");
-        let skip = true;
-        const values = [];
-        for await (const [_, name, tag, ..._rest] of resp.body.pipe(csv())) {
-            if (skip) {
-                if (name === "Clan Name") skip = false;
-                continue;
-            }
-            values.push({
-                clantag: formatTag(tag),
-                clanname: name,
-                active: true
-            });
-        }
+
         const rows = await t.any(pgp.helpers.insert(values, clans_cs) +
             " on conflict (clantag) do update set clanname=EXCLUDED.clanname, active=true returning null;");
 
@@ -43,6 +35,6 @@ module.exports = async (req, res) => {
             }
         });
 
-        res.send(rows.length + " clans marked as FWA. " + recalc.length + " clan points recalculated." + goBack("/admin", "the admin menu"));
+        res.send(rows.length + " clans marked as official. " + recalc.length + " clan points recalculated." + goBack("/admin", "the admin menu"));
     });
 };

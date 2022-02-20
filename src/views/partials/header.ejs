@@ -1,7 +1,7 @@
 <!doctype html>
 <html>
   <head>
-    <title><%= "FWA Points" + (locals.title ? ": " + title : "") %></title>
+    <title><%= "CC Points" + (locals.title ? ": " + title : "") %></title>
     <script>
       function load() {
         function redgreen(t) {
@@ -47,7 +47,7 @@
     <link rel="stylesheet" href="styles.css">
   </head>
   <body onload="load();">
-    <h1>FWA Points Database</h1>
+    <h1>CC Points Database</h1>
     <p>
       <a href="/">Home Page</a> |
       <% if (req.session.user) { %>

@@ -1,5 +1,5 @@
 create extension pgcrypto;
-alter database fwapoints set timezone to 'UTC';
+alter database ccpoints set timezone to 'UTC';
 
 create table users (
     userid serial primary key,
@@ -29,9 +29,6 @@ create table users (
 );
 insert into users (name, email, password, perms) values
     ('root', 'root', crypt('root', gen_salt('bf')), '["all"]'::jsonb);
-insert into users (name, email, apikey) values
-    ('(sanctions sheet)', '_sanctions', '91c4fc99-132b-439b-8467-36e59c23b548'),
-    ('(rewards sheet)', '_rewards', 'de235ce2-c14c-4637-b242-d8522e90366b');
 
 create table clans (
     clantag text primary key,
@@ -42,8 +39,7 @@ create table clans (
     warid int null,
     special jsonb not null default '[]'::jsonb,
         /* valid special:
-            redzone = points pinned to -50
-            zerowin = points pinned to -100
+            [currently none]
         */
     points int not null default 0
         -- only a memoization, completely dependent data
@@ -67,11 +63,11 @@ create table auditlog (
     action text not null,
         /* valid actions and cdata:
             * login: {to: url, email}
-            * edit: {from: special, to: special}
             * reload: {active: int, all: int}
             * edituser: {userid, from: perms, to: perms}
             * register: {userid, name, email, perms, apikey}
             * profile: {from, to, passwordChanged}
+            * record: {transid, to, newPoints}
             * transaction: {transid, from, to, newPoints}
             * deltransaction: {transid, from, newPoints}
             * record: {transid, to, newPoints}
@@ -118,9 +114,6 @@ create table transactions (
     privnote text null,
     points int not null,
     reason text null,
-        /* reason has import or sync or zerowin or redzone
-            if added for that reason automatically
-            then they can be removed automatically easily */
     deleted boolean default false
 );
 create index on transactions (clantag, ts, transid);

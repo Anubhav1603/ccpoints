@@ -49,7 +49,7 @@
               data = data.items.filter(e => e.result && e.opponent.tag)[0];
               if (!data) {
                 // there are no wars in the war log
-                // this is exceedingly unlikely (fresh new clan newly in fwa) so we just mark it as PWL
+                // this is exceedingly unlikely (fresh new clan newly in league) so we just mark it as PWL
                 // and admins can manually figure it out
                 await t.none("update clans set logprivate=true, lastchecked=now() where clantag=$[clantag];", {clantag});
                 return;
@@ -115,9 +115,8 @@
           <p>Sync is complete.</p>
           <input type="submit" value="Force Redownload Data" />
           <button type="button" onclick="addSearch('threshold',prompt('How many days old before assuming it\'s too old to add?', '<%= threshold %>'))">Set Day Threshold</button>
-          <p>If Record is checked, then the point change in the last column will be applied to the clan. The checkbox is initially checked if the last war was within 48 hours and both clans are FWA clans (and the war was not yet recorded for that side).</p>
-          <p>(<span class="red">PWL</span>) means the clan has a private war log - but, if their opponent's war log is public, and is FWA, everything is fine. If not, their opponent is unknown, an error is printed. All links in this table open in a new tab.</p>
-          <p>Treat clans with special considerations (red zone or zero win) the same when working on this page. When this form is submitted, the sync transaction for those clans will be zeroed with a special note, so those clans will stay at their respective amounts.</p>
+          <p>If Record is checked, then the point change in the last column will be applied to the clan. The checkbox is initially checked if the last war was within 48 hours and both clans are official clans (and the war was not yet recorded for that side).</p>
+          <p>(<span class="red">PWL</span>) means the clan has a private war log - but, if their opponent's war log is public, and is official, everything is fine. If not, their opponent is unknown, an error is printed. All links in this table open in a new tab.</p>
         </form>
         <form action="do_sync" method="post">
           <% const clans = await db.any("select * from clans left join wars on wars.warid = clans.warid where active=true order by clanname asc;"); %>
@@ -181,9 +180,9 @@
                     <td><label for="<%= clantag %>_include"><%= winlose %></label></td>
                     <td><label for="<%= clantag %>_include">
                       <% if (!data[opponent].active) { %>
-                        <span class="red">vs. non-FWA</span>
+                        <span class="red">vs. non-official</span>
                       <% } else { %>
-                        vs. FWA
+                        vs. official
                       <% } %>
                     </label></td>
                     <td>
