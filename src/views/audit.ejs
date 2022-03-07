@@ -1,6 +1,7 @@
 <%
   const check = await requirePerm(req, "manage");
-  const limit = req.query.limit || 100;
+  let limit = +req.query.limit;
+  if (!isFinite(limit) || limit <= 0) limit = 100;
   if (check !== true) { %><%- check %><% }
   else {
     let query = "select * from auditlog left join users on users.userid=auditlog.userid";
