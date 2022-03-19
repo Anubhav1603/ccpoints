@@ -6,7 +6,7 @@ services:
      - .:/app
     restart: always
     working_dir: /app/src
-    entrypoint: "yarn watch"
+    command: "bash -c 'yarn && yarn watch'"
     ports:
      - 3000:3000
     environment:

@@ -9,7 +9,7 @@ services:
      - nginx
     restart: always
     working_dir: /app/src
-    entrypoint: "yarn start"
+    command: "bash -c 'yarn && yarn start'"
     environment:
       - SESSION_SECRET=changeme
       - CLASH_API_TOKEN=changeme
